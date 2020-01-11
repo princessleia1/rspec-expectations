@@ -764,6 +764,39 @@ RSpec.describe "#include matcher" do
       end
     end
 
+    describe "expect(hash).to include(key_matcher => value)" do
+      it "passes when the matcher matches a pair", :if => (RUBY_VERSION.to_f > 1.8) do
+        expect(:drink => "water", :food => "bread").to include(a_string_matching(/foo/) => "bread")
+      end
+
+      it "passes when the matcher matches all pairs", :if => (RUBY_VERSION.to_f > 1.8) do
+        expect(:drink => "water", :food => "bread").to include(a_string_matching(/foo/) => "bread", a_string_matching(/ink/) => "water")
+      end
+
+      it 'provides a description' do
+        description = include(a_string_matching(/foo/) => "bread").description
+        expect(description).to eq('include {(a string matching /foo/) => "bread"}')
+      end
+
+      it 'fails with a clear message when the value does not match', :if => (RUBY_VERSION.to_f > 1.8) do
+        expect {
+          expect(:drink => "water", :food => "bread").to include(a_string_matching(/foo/) => "meat")
+        }.to fail_matching('expected {:drink => "water", :food => "bread"} to include {(a string matching /foo/) => "meat"}')
+      end
+
+      it 'fails with a clear message when the matcher does not match', :if => (RUBY_VERSION.to_f > 1.8) do
+        expect {
+          expect(:drink => "water", :food => "bread").to include(a_string_matching(/bar/) => "bread")
+        }.to fail_matching('expected {:drink => "water", :food => "bread"} to include {(a string matching /bar/) => "bread"}')
+      end
+
+      it 'fails with a clear message when several matchers do not match', :if => (RUBY_VERSION.to_f > 1.8) do
+        expect {
+          expect(:drink => "water", :food => "bread").to include(a_string_matching(/bar/) => "bread", a_string_matching(/baz/) => "water")
+        }.to fail_matching('expected {:drink => "water", :food => "bread"} to include {(a string matching /bar/) => "bread", (a string matching /baz/) => "water"}')
+      end
+    end
+
     describe "expect(array).not_to include(multiple, matcher, arguments)" do
       it "passes if none of the target values satisfies any of the matchers" do
         expect(['foo', 'bar', 'baz']).not_to include(a_string_containing("gh"), a_string_containing('de'))
